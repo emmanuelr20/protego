@@ -1,5 +1,7 @@
 import _words from "lodash.words";
-export const wordCounter = (text: string) => {
+export const wordCounter = (
+  text: string
+): { totalWords: number; uniqueWords: number } => {
   const words = _words(text);
 
   // Count word frequency

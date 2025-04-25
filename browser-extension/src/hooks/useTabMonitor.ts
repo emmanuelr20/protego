@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 
-export const useTabMonitor = () => {
+export const useTabMonitor = (): {
+  currentUrl?: string;
+  currentTabId?: number;
+} => {
   const [currentUrl, setCurrentUrl] = useState<string>();
   const [currentTabId, setCurrentTabId] = useState<number>();
 
@@ -36,12 +39,12 @@ export const useTabMonitor = () => {
     };
 
     // Set up listeners
-    chrome.tabs.onActivated.addListener(onTabActivated);
-    chrome.tabs.onUpdated.addListener(onTabUpdated);
+    chrome?.tabs?.onActivated.addListener(onTabActivated);
+    chrome?.tabs?.onUpdated.addListener(onTabUpdated);
 
     return () => {
-      chrome.tabs.onActivated.removeListener(onTabActivated);
-      chrome.tabs.onUpdated.removeListener(onTabUpdated);
+      chrome?.tabs?.onActivated.removeListener(onTabActivated);
+      chrome?.tabs?.onUpdated.removeListener(onTabUpdated);
     };
   }, [currentTabId]);
 

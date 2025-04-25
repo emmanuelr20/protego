@@ -14,3 +14,12 @@ export interface PageVisitResponse {
   limit: number;
   total: number;
 }
+
+export interface PageVisitRequest {
+  linkCount: number;
+  imageCount: number;
+  characterCount: number;
+  datetimeVisited: string;
+  url: string;
+  wordCount: number;
+}

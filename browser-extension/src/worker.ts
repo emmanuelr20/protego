@@ -1,8 +1,8 @@
 import { wordCounter } from "./libs/index";
 import { api } from "./services/api";
 
-chrome.tabs.onUpdated.addListener(async (tabId, info) => {
-  if (!info.url || info.url.slice(0, 9) === "chrome://") return;
+chrome?.tabs?.onUpdated.addListener(async (tabId, info) => {
+  if (!info.url || info.url.slice(0, 4) !== "http") return;
   try {
     const datetimeVisited = new Date().toISOString();
     const [response] = await chrome.scripting.executeScript({
@@ -11,31 +11,40 @@ chrome.tabs.onUpdated.addListener(async (tabId, info) => {
         const linkCount = document.body.querySelectorAll("a[href]").length;
         const imageCount = document.body.querySelectorAll("img").length;
 
-        // Function to get visible text content
         const getVisibleText = (element: Element): string => {
-          if (element.nodeType === Node.TEXT_NODE) {
-            return element.textContent || "";
-          }
-          try {
-            const style = window.getComputedStyle(element);
-            if (
-              style.display === "none" ||
-              style.visibility === "hidden" ||
-              style.opacity === "0"
-            ) {
-              return "";
+          let visibleText = "";
+          const stack: Element[] = [element];
+
+          // we use a stack to traverse the DOM tree and flatten the tree
+          while (stack.length > 0) {
+            const currentElement = stack.pop();
+            if (!currentElement) continue;
+
+            // if we find a text node, we add it to the visible text with a space to seperate the lines
+            if (currentElement.nodeType === Node.TEXT_NODE) {
+              visibleText += ` ${currentElement.textContent || ""}`;
+              continue;
             }
 
-            let text = "";
+            if (currentElement.nodeType === Node.ELEMENT_NODE) {
+              const style = window.getComputedStyle(currentElement as Element);
 
-            for (const child of Array.from(element.childNodes)) {
-              text += getVisibleText(child as Element);
+              if (
+                style.display === "none" ||
+                style.visibility === "hidden" ||
+                parseFloat(style.opacity) === 0
+              ) {
+                continue;
+              }
+
+              // flatten the node and add it to the stack
+              stack.push(
+                ...(Array.from(currentElement.childNodes) as Element[])
+              );
             }
-            return text;
-          } catch (error) {
-            console.log(error, typeof element, element, element.nodeType);
-            return "";
           }
+
+          return visibleText;
         };
 
         const visibleText = getVisibleText(document.body);

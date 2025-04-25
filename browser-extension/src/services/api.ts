@@ -1,14 +1,5 @@
 import { API_URL } from "../const";
-import { PageVisitResponse } from "../types";
-
-interface PageVisitRequest {
-  linkCount: number;
-  imageCount: number;
-  characterCount: number;
-  datetimeVisited: string;
-  url: string;
-  wordCount: number;
-}
+import { PageVisitRequest, PageVisitResponse } from "../types";
 
 export const api = {
   async getPageVisits(
@@ -41,7 +32,5 @@ export const api = {
     if (response.status !== 200) {
       throw new Error("Failed to create page visit");
     }
-
-    return response.json();
   },
 };
