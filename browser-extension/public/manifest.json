@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "History Sidepanel",
+  "version": "1.0.0",
+  "description": "A simple React app as a Chrome extension",
+  "permissions": ["activeTab", "scripting", "storage", "tabs", "sidePanel"],
+  "host_permissions": ["http://*/*", "https://*/*"],
+  "side_panel": {
+    "default_path": "index.html"
+  },
+  "background": {
+    "service_worker": "worker.js",
+    "type": "module"
+  }
+}
