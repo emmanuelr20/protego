@@ -87,6 +87,18 @@ button:focus-visible {
   overflow-y: auto;
 }
 
+.error-message {
+  color: red;
+  padding: 10px 0;
+  font-size: 1.2em;
+}
+
+.loading-spinner {
+  color: orange;
+  padding: 10px 0;
+  font-size: 1.2em;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;

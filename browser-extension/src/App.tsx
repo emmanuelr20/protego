@@ -12,6 +12,9 @@ function App() {
   const [totalVisit, setTotalVisit] = useState(0);
   const [pageVisit, setPageVisit] = useState<PageVisit>();
   const [pageVisits, setPageVisits] = useState<PageVisit[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { currentTabId, currentUrl } = useTabMonitor();
 
   const cleanUp = () => {
@@ -19,11 +22,14 @@ function App() {
     setTotalVisit(0);
     setPageVisit(undefined);
     setPageVisits([]);
+    setError(null);
   };
 
   const loadMorePageVisits = async () => {
     if (currentUrl) {
       try {
+        setIsLoadingMore(true);
+        setError(null);
         setOffset(offset + PAGE_LIMIT);
         const result = await api.getPageVisits(currentUrl, offset, PAGE_LIMIT);
 
@@ -35,6 +41,10 @@ function App() {
         }
       } catch (error) {
         console.error("Failed to fetch metrics:", error);
+        setError("Failed to load more history items");
+        setOffset(offset - PAGE_LIMIT);
+      } finally {
+        setIsLoadingMore(false);
       }
     }
   };
@@ -43,6 +53,8 @@ function App() {
     const initData = async () => {
       if (currentUrl) {
         try {
+          setIsLoading(true);
+          setError(null);
           const result = await api.getPageVisits(currentUrl, 0, PAGE_LIMIT);
 
           if (result) {
@@ -53,6 +65,9 @@ function App() {
           }
         } catch (error) {
           console.error("Failed to fetch metrics:", error);
+          setError("Failed to load page history");
+        } finally {
+          setIsLoading(false);
         }
       }
     };
@@ -72,6 +87,25 @@ function App() {
       chrome?.runtime?.onMessage.removeListener(listener);
     };
   }, [currentTabId, currentUrl]);
+
+  if (isLoading) {
+    return (
+      <>
+        <h1>History Sidepanel</h1>
+        <div className="loading-spinner">Loading...</div>
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <>
+        <h1>History Sidepanel</h1>
+        <div className="error-message">{error}</div>
+        <button onClick={() => window.location.reload()}>Retry</button>
+      </>
+    );
+  }
 
   return (
     <>
@@ -100,7 +134,13 @@ function App() {
               <Card key={pv.id} value={formatDate(pv.datetime_visited)} />
             ))}
             {offset + PAGE_LIMIT < totalVisit && (
-              <button onClick={loadMorePageVisits}>Load More</button>
+              <button
+                onClick={loadMorePageVisits}
+                disabled={isLoadingMore}
+                className={isLoadingMore ? "loading" : ""}
+              >
+                {isLoadingMore ? "Loading..." : "Load More"}
+              </button>
             )}
           </div>
         </>

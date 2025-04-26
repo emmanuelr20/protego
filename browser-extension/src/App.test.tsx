@@ -90,6 +90,23 @@ describe("App", () => {
     });
 
     expect(
+      await screen.findByText("Failed to load page history")
+    ).toBeInTheDocument();
+  });
+
+  it("shows no page visit message when API call fails", async () => {
+    vi.mocked(api.getPageVisits).mockResolvedValue({
+      page_visits: [],
+      total: 0,
+      offset: 0,
+      limit: 10,
+    });
+
+    await act(async () => {
+      render(<App />);
+    });
+
+    expect(
       await screen.findByText("No PageVisit Available for this page")
     ).toBeInTheDocument();
   });
