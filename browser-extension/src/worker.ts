@@ -12,39 +12,40 @@ chrome?.tabs?.onUpdated.addListener(async (tabId, info) => {
         const imageCount = document.body.querySelectorAll("img").length;
 
         const getVisibleText = (element: Element): string => {
-          let visibleText = "";
-          const stack: Element[] = [element];
+          const visibleText: string[] = [];
 
-          // we use a stack to traverse the DOM tree and flatten the tree
-          while (stack.length > 0) {
-            const currentElement = stack.pop();
-            if (!currentElement) continue;
-
-            // if we find a text node, we add it to the visible text with a space to seperate the lines
-            if (currentElement.nodeType === Node.TEXT_NODE) {
-              visibleText += ` ${currentElement.textContent || ""}`;
-              continue;
+          // Create a TreeWalker to traverse text nodes in the DOM
+          const walker = document.createTreeWalker(
+            element,
+            NodeFilter.SHOW_TEXT,
+            {
+              acceptNode: (node) => {
+                const parent = node.parentElement;
+                if (parent) {
+                  // Get computed styles of the parent to determine visibility
+                  const style = window.getComputedStyle(parent);
+                  if (
+                    style.display === "none" ||
+                    style.visibility === "hidden" ||
+                    parseFloat(style.opacity) === 0
+                  ) {
+                    return NodeFilter.FILTER_REJECT; // Reject the node if it's not visible
+                  }
+                }
+                return NodeFilter.FILTER_ACCEPT; // Accept the node if it's visible
+              },
             }
+          );
 
-            if (currentElement.nodeType === Node.ELEMENT_NODE) {
-              const style = window.getComputedStyle(currentElement as Element);
+          let currentNode: Node | null;
 
-              if (
-                style.display === "none" ||
-                style.visibility === "hidden" ||
-                parseFloat(style.opacity) === 0
-              ) {
-                continue;
-              }
-
-              // flatten the node and add it to the stack
-              stack.push(
-                ...(Array.from(currentElement.childNodes) as Element[])
-              );
-            }
+          // Iterate through visible text nodes
+          while ((currentNode = walker.nextNode())) {
+            visibleText.push(currentNode.textContent || "");
           }
 
-          return visibleText;
+          // Join and return all visible text as a single string
+          return visibleText.join(" ");
         };
 
         const visibleText = getVisibleText(document.body);

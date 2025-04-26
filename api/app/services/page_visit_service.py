@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import PageVisit
 from app.schemas import PageVisitIn
 from urllib.parse import urlparse
+from app.utils.db_utils import handle_db_errors
 
 
 def normalize_url(url: str) -> str:
@@ -15,6 +16,7 @@ def normalize_url(url: str) -> str:
     return f"{parsed.scheme}://{parsed.netloc}{path}"
 
 
+@handle_db_errors("creating page visit", operation_type="write")
 async def create_page_visit(db: AsyncSession, page_visit_in: PageVisitIn) -> PageVisit:
     input_data = page_visit_in.model_dump()
     input_data["url"] = normalize_url(str(input_data["url"]))
@@ -25,6 +27,7 @@ async def create_page_visit(db: AsyncSession, page_visit_in: PageVisitIn) -> Pag
     return page_visit
 
 
+@handle_db_errors("fetching page visits", operation_type="read")
 async def get_page_visits(
     db: AsyncSession, url: str | None = None, offset: int = 0, limit: int = 10
 ) -> tuple[list[PageVisit], int]:
@@ -54,6 +57,7 @@ async def get_page_visits(
     return page_visits, total
 
 
+@handle_db_errors("fetching URL metrics", operation_type="read")
 async def get_url_metric(db: AsyncSession, url: str) -> PageVisit | None:
     url = normalize_url(url)
     total_result = await db.execute(

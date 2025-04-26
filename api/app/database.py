@@ -13,10 +13,17 @@ db_name = POSTGRES_DATABASE = os.getenv("POSTGRES_DATABASE", "postgres")
 db_url = f"postgresql+asyncpg://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 
 
-engine = create_async_engine(db_url, echo=True)
+engine = create_async_engine(
+    db_url,
+    echo=False,
+    pool_size=5,
+    pool_timeout=30,
+    max_overflow=10,
+)
 AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 Base = declarative_base()
+
 
 async def get_db():
     async with AsyncSessionLocal() as db:
